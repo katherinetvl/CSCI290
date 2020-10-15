@@ -2,37 +2,51 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const twilio = require('twilio');
 
-const accountSid = "";
-const authToken = "";
+//const accountSid = "";
+//const authToken = "";
 
-const client = new twilio(accountSid, authToken);
+var enterAccountSid = process.argv[2];
+var enterAuthToken = process.argv[3];
 
-const MessagingResponse = require("twilio").twiml.MessagingResponse;
-
-let lastMessage = "";
-
-let app = express();
-
-app.use(bodyParser.urlencoded({extended:false}));
-
-// when incoming messages happen 
-app.post('/sms', function (request, response)
+if (enterAccountSid && enterAuthToken)
 {
-    const twiml = new MessagingResponse();
+    accountSid = enterAccountSid;
+    authToken = enterAuthToken;
 
-    switch(request.body.Body.toLowerCase())
+    const client = new twilio(accountSid, authToken);
+
+    const MessagingResponse = require("twilio").twiml.MessagingResponse;
+
+    let lastMessage = "";
+
+    let app = express();
+
+    app.use(bodyParser.urlencoded({extended:false}));
+
+    // when incoming messages happen 
+    app.post('/sms', function (request, response)
     {
-        case 'last':
-            twiml.message(lastMessage);
-            break;
-        default:
-            lastMessage = request.body.Body;
-            twiml.message("You have registered this message as the last message. Enter 'last' to see the previous message at any time.");
-    }
+        const twiml = new MessagingResponse();
 
-    response.writeHead(200,{'Content-Type' : 'text/xml'});
-    console.log(twiml.toString());
-    response.end(twiml.toString());
-});
+        switch(request.body.Body.toLowerCase())
+        {
+            case 'last':
+                twiml.message(lastMessage);
+                break;
+            default:
+                lastMessage = request.body.Body;
+                twiml.message("You have registered this message as the last message. Enter 'last' to see the previous message at any time.");
+        }
 
-app.listen(8000);
+        response.writeHead(200,{'Content-Type' : 'text/xml'});
+        // console.log(twiml.toString());
+        response.end(twiml.toString());
+    });
+
+    app.listen(8000);
+}
+else 
+{
+    console.log("Please enter Twilio account and password information in command line.");
+    return 1;
+}
